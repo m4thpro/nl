@@ -17,6 +17,7 @@ level = 1
 lives = 3
 --title = "squares modulo 8"
 title = "odd numbers"
+desired_population = 3
 
 -- position of board
 cx = 6
@@ -172,16 +173,6 @@ end
 function _init()
    troggles = {}
    board = {}
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()
-   make_random_troggle()   
 
    for i=1,cx do
       board[i] = {}
@@ -279,9 +270,13 @@ function collisions()
 end
  
 function _update()
+   if #troggles < desired_population then
+      make_random_troggle()
+   end
+   
    foreach(troggles, move_troggle)
    collisions()
-   
+
    if (btn(0)) then pl.dx=-1 end
    if (btn(1)) then pl.dx= 1 end
    if (btn(2)) then pl.dy=-1 end
