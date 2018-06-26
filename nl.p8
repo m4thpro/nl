@@ -15,69 +15,120 @@ pl.left = false
 score = 17
 level = 1
 lives = 3
+title = "squares modulo 8"
 
 -- position of board
 cx = 6
 cy = 5
 originx = 16
-originy = 16
+originy = 24
+board = {}
+
+function eat(number)
+   score = score + 1
+end
+
+function _init()
+   for i=1,cx do
+      board[i] = {}
+      for j=1,cy do
+	 board[i][j] = i-j
+	 if i==j then
+	    board[i][j] = false
+	 end
+      end      
+   end
+end
+
+function draw_title()
+   local width = 4 * #title
+   local x = 64 - 2 * #title
+   line(x, 8, x + width - 2, 8, 9 )
+   line(x, 16, x + width - 2, 16, 9 )   
+   print(title, x, 10, 7)
+end
+
+function draw_board()
+   for i=1,cx do
+      for j=1,cy do
+	 if board[i][j] != false then
+	    local text = tostr(board[i][j])
+	    local width = 4 * #text - 2
+	    print(tostr(board[i][j]),(i-1)*16 + originx + 8 - width/2,(j-1)*16 + originy + 6, 6)
+	 end
+      end      
+   end
+end
 
 function draw_player()
-   -- pieces of player
-   top = 0
-   standing = 16
-   marching1 = 2
-   marching2 = 18
    local bottom
    
    if pl.dx == 0 and pl.dy == 0 then
-      bottom = standing
+      bottom = 16
    else
       if (pl.x + pl.y) % 4 == 2 then
-	 bottom = marching1
+	 bottom = 18
       end
       if (pl.x + pl.y) % 4 == 0 then
-	 bottom = marching2
+	 bottom = 2
       end
    end
    
    pal(8,0)
-   spr(top, pl.x, pl.y, 2, 1, pl.left)
-   spr(bottom, pl.x, pl.y + 8, 2, 1, pl.left)   
+   if pl.mouth_open then
+      spr(4, pl.x, pl.y, 2, 2, pl.left)
+   else
+      spr(0, pl.x, pl.y, 2, 1, pl.left)      
+      spr(bottom, pl.x, pl.y + 8, 2, 1, pl.left)  end 
 end
 
 function _update()
- if (btn(0)) then pl.dx=-1 end
- if (btn(1)) then pl.dx= 1 end
- if (btn(2)) then pl.dy=-1 end
- if (btn(3)) then pl.dy= 1 end
+   if (btn(0)) then pl.dx=-1 end
+   if (btn(1)) then pl.dx= 1 end
+   if (btn(2)) then pl.dy=-1 end
+   if (btn(3)) then pl.dy= 1 end
+   
+   -- Move in the desired direction
+   pl.x = pl.x + 2*pl.dx
+   pl.y = pl.y + 2*pl.dy
+   
+   -- Do not walk off the screen
+   if pl.x < originx then pl.x = originx end
+   if pl.y < originy then pl.y = originy end
+   if pl.x > originx + 16*(cx-1) then pl.x = originx + 16*(cx-1) end
+   if pl.y > originy + 16*(cy-1) then pl.y = originy + 16*(cy-1) end  
+   
+   -- stay pointing in movement direction
+   if pl.dx < 0 then
+      pl.left = true
+   end
+   if pl.dx > 0 then
+      pl.left = false
+   end
+   
+   -- stop when we make it to a square
+   if (pl.x - originx) % 16 == 0 then
+      pl.dx = 0
+   end
+   if (pl.y - originy) % 16 == 0 then
+      pl.dy = 0
+   end
+   
+   -- handle eating
+   if (btn(4) or btn(5)) then
+      pl.mouth_open=true
+   end
 
- -- Move in the desired direction
- pl.x = pl.x + 2*pl.dx
- pl.y = pl.y + 2*pl.dy
+   local i = ceil((pl.x - originx) / 16 + 0.5)
+   local j = ceil((pl.y - originy) / 16 + 0.5)
+   if not (btn(4) or btn(5)) then
+      if pl.mouth_open and board[i][j] != false then
+	 eat(board[i][j])
+	 board[i][j] = false
+      end
+      pl.mouth_open=false	    
+   end
 
- -- Do not walk off the screen
- if pl.x < originx then pl.x = originx end
- if pl.y < originy then pl.y = originy end
- if pl.x > originx + 16*(cx-1) then pl.x = originx + 16*(cx-1) end
- if pl.y > originy + 16*(cy-1) then pl.y = originy + 16*(cy-1) end  
-
- -- stay pointing in movement direction
- if pl.dx < 0 then
-    pl.left = true
- end
- if pl.dx > 0 then
-    pl.left = false
- end
-
- -- stop when we make it to a square
- if (pl.x - originx) % 16 == 0 then
-    pl.dx = 0
- end
- if (pl.y - originy) % 16 == 0 then
-    pl.dy = 0
- end
- 
 end
 
 function _draw()
@@ -86,13 +137,15 @@ function _draw()
    map(0,0, 0,0, 16,16)
    draw_player()
 
-   print("score: " .. tostr(score), 0, 116, 7)
-   print("level: " .. tostr(level), 0, 0, 5)
-   print("multiples of 2", 0, 8, 7)
+   print("score " .. tostr(score), 0, 116, 7)
+   print("level " .. tostr(level), 0, 0, 5)
+   draw_title()
 
    for i = 1,lives do
       spr(0, 30 + 16 * i, 128-16, 2, 2)
    end
+
+   draw_board()
 end
 
 __gfx__
