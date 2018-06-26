@@ -15,7 +15,8 @@ pl.left = false
 score = 17
 level = 1
 lives = 3
-title = "squares modulo 8"
+--title = "squares modulo 8"
+title = "odd numbers"
 
 -- position of board
 cx = 6
@@ -25,6 +26,10 @@ originy = 24
 
 function eat(number)
    score = score + 1
+end
+
+function troggle_fiddle(i,j)
+   board[i][j] = board[i][j] + 1
 end
 
 function draw_troggle(t)
@@ -103,6 +108,14 @@ function move_troggle(t)
       -- once we're done waiting...
       if t.waiting < 0 then
 	 t.waiting = nil
+
+	 -- troggles have a tendency to mess with the board
+	 local i = ceil((t.x - originx) / 16 + 0.5)
+	 local j = ceil((t.y - originy) / 16 + 0.5)
+	 if board[i][j] then
+	    troggle_fiddle(i,j)
+	 end
+	 
 	 -- move in a random direction
 	 local r = flr(4*rnd())
 	 if r == 0 then t.dx =  1 end
@@ -133,10 +146,43 @@ function make_troggle(x,y)
    return t
 end
 
+function make_random_troggle()
+   local t = make_troggle(0,0)
+   local r = flr(4*rnd())
+   if r == 0 then t.dx =  1 end
+   if r == 1 then t.dx = -1 end
+   if r == 2 then t.dy =  1 end
+   if r == 3 then t.dy = -1 end
+
+   if t.dy ==  1 then t.y = originy-16 end
+   if t.dy == -1 then t.y = originy+cy*16 end
+   if t.dx ==  1 then t.x = originx-16 end
+   if t.dx == -1 then t.x = originx+cx*16 end      
+   
+   if t.dy == 0 then
+      t.y = originy + flr(cy*rnd()) * 16
+   end
+   
+   if t.dx == 0 then
+      t.x = originx + flr(cy*rnd()) * 16
+   end
+
+end
+
 function _init()
    troggles = {}
    board = {}
-   make_troggle(3*16 + originx,2*16 + originy)
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()
+   make_random_troggle()   
+
    for i=1,cx do
       board[i] = {}
       for j=1,cy do
@@ -198,24 +244,38 @@ function draw_player()
    end 
 end
 
-function collide_event(t)
-   sfx(2)
+function collide_event(s,t)
+   if s == pl then
+      --sfx(2)
+      return
+   end
+
+   s.dead = true
 end
 
-function collide(t)
-   local dx = pl.x - t.x 
-   local dy = pl.y - t.y  
-   if (abs(dx) < 4) then
-      if (abs(dy) < 4) then
-	 collide_event(t)
+function collide(s,t)
+   local dx = s.x - t.x 
+   local dy = s.y - t.y
+   local delta = 1
+   if s == pl then delta = 4 end
+   if (abs(dx) < delta) then
+      if (abs(dy) < delta) then
+	 collide_event(s,t)
       end
    end
 end
 
 function collisions()
    for t in all(troggles) do
-      collide(t)
+      collide(pl,t)
    end
+   for t in all(troggles) do
+      for s in all(troggles) do
+	 if s ~= t and not s.dead and not t.dead then
+	    collide(s,t)
+	 end
+      end
+   end   
 end
  
 function _update()
@@ -279,8 +339,7 @@ function _draw()
    rectfill (0,0,127,127,0) 
    map(0,0, 0,0, 16,16)
    
-   clip(originx + 1,originy + 1,
-	cx*16 - 1, cy*16 - 1)
+   clip(originx + 1,originy + 1, cx*16 - 1, cy*16 - 1)
    draw_player()
    draw_board()   
    foreach(troggles, draw_troggle)
