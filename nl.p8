@@ -4,6 +4,96 @@ __lua__
 -- number lunchers
 -- by kisonecat
 
+pl = {}
+pl.x = 16
+pl.y = 16
+pl.dx = 0
+pl.dy = 0
+pl.left = false
+
+-- game stats
+score = 17
+level = 1
+lives = 3
+
+-- position of board
+cx = 6
+cy = 5
+originx = 16
+originy = 16
+
+function draw_player()
+   -- pieces of player
+   top = 0
+   standing = 16
+   marching1 = 2
+   marching2 = 18
+   local bottom
+   
+   if pl.dx == 0 and pl.dy == 0 then
+      bottom = standing
+   else
+      if (pl.x + pl.y) % 4 == 2 then
+	 bottom = marching1
+      end
+      if (pl.x + pl.y) % 4 == 0 then
+	 bottom = marching2
+      end
+   end
+   
+   pal(8,0)
+   spr(top, pl.x, pl.y, 2, 1, pl.left)
+   spr(bottom, pl.x, pl.y + 8, 2, 1, pl.left)   
+end
+
+function _update()
+ if (btn(0)) then pl.dx=-1 end
+ if (btn(1)) then pl.dx= 1 end
+ if (btn(2)) then pl.dy=-1 end
+ if (btn(3)) then pl.dy= 1 end
+
+ -- Move in the desired direction
+ pl.x = pl.x + 2*pl.dx
+ pl.y = pl.y + 2*pl.dy
+
+ -- Do not walk off the screen
+ if pl.x < originx then pl.x = originx end
+ if pl.y < originy then pl.y = originy end
+ if pl.x > originx + 16*(cx-1) then pl.x = originx + 16*(cx-1) end
+ if pl.y > originy + 16*(cy-1) then pl.y = originy + 16*(cy-1) end  
+
+ -- stay pointing in movement direction
+ if pl.dx < 0 then
+    pl.left = true
+ end
+ if pl.dx > 0 then
+    pl.left = false
+ end
+
+ -- stop when we make it to a square
+ if (pl.x - originx) % 16 == 0 then
+    pl.dx = 0
+ end
+ if (pl.y - originy) % 16 == 0 then
+    pl.dy = 0
+ end
+ 
+end
+
+function _draw()
+   camera (0, 0)
+   rectfill (0,0,127,127,0) 
+   map(0,0, 0,0, 16,16)
+   draw_player()
+
+   print("score: " .. tostr(score), 0, 116, 7)
+   print("level: " .. tostr(level), 0, 0, 5)
+   print("multiples of 2", 0, 8, 7)
+
+   for i = 1,lives do
+      spr(0, 30 + 16 * i, 128-16, 2, 2)
+   end
+end
 
 __gfx__
 00000000000000000300000000000330000000770770000000000000000000000000000000000000000000000000000000000000eeeeeeeeeeeeeeee00000000
