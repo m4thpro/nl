@@ -22,17 +22,125 @@ cx = 6
 cy = 5
 originx = 16
 originy = 24
-board = {}
 
 function eat(number)
    score = score + 1
 end
 
+function draw_troggle(t)
+   local bottom = 16
+
+   if t.dx == 0 and t.dy == 0 then
+      bottom = 16
+   else
+      if (t.x + t.y) % 4 == 2 then
+	 bottom = 2
+      end
+      if (t.x + t.y) % 4 == 0 then
+	 bottom = 18
+      end
+   end
+   
+   pal(8,0)
+   if t.down then
+      spr(36, t.x, t.y, 2, 1)
+      spr(bottom + 36, t.x, t.y + 8, 2, 1)
+      return
+   end
+
+   if t.up then
+      spr(40, t.x, t.y, 2, 1) 
+      spr(bottom + 40, t.x, t.y + 8, 2, 1)
+      return
+   end
+
+   spr(32, t.x, t.y, 2, 1, t.left)      
+   spr(bottom + 32, t.x, t.y + 8, 2, 1, t.left)
+end
+
+function move_troggle(t)
+   t.x = t.x + t.dx
+   t.y = t.y + t.dy
+
+   -- stay pointing in movement direction
+   if t.dx < 0 then
+      t.left = true
+      t.up = false
+      t.down = false
+   end
+   if t.dx > 0 then
+      t.left = false
+      t.up = false
+      t.down = false      
+   end
+   if t.dy < 0 then
+      t.left = false      
+      t.up = true
+      t.down = false
+   end
+   if t.dy > 0 then
+      t.left = false      
+      t.up = false
+      t.down = true
+   end
+
+   -- stop when we make it to a square
+   if (t.x - originx) % 16 == 0 then
+      t.dx = 0
+   end
+   if (t.y - originy) % 16 == 0 then
+      t.dy = 0
+   end
+
+   -- if we are not moving, then wait a random time
+   if t.dx == 0 and t.dy == 0 and not t.waiting then
+      t.waiting = rnd() * 32
+   end
+
+   if t.waiting then
+      t.waiting = t.waiting - 1
+
+      -- once we're done waiting...
+      if t.waiting < 0 then
+	 t.waiting = nil
+	 -- move in a random direction
+	 local r = flr(4*rnd())
+	 if r == 0 then t.dx =  1 end
+	 if r == 1 then t.dx = -1 end
+	 if r == 2 then t.dy =  1 end
+	 if r == 3 then t.dy = -1 end	 
+      end
+   end
+
+   -- troggles die when off the screen
+   if t.x == originx - 16 then t.dead = true end
+   if t.y == originy - 16then t.dead = true end
+   if t.x == originx + 16*cx then t.dead = true end
+   if t.y == originy + 16*cy then t.dead = true end
+
+   if t.dead then
+      del(troggles,t)
+   end
+end
+
+function make_troggle(x,y)
+   local t = {}
+   t.x = x
+   t.y = y
+   t.dx = 0
+   t.dy = 0
+   add(troggles,t)
+   return t
+end
+
 function _init()
+   troggles = {}
+   board = {}
+   make_troggle(3*16 + originx,2*16 + originy)
    for i=1,cx do
       board[i] = {}
       for j=1,cy do
-	 board[i][j] = i-j
+	 board[i][j] = i+j
 	 if i==j then
 	    board[i][j] = false
 	 end
@@ -40,12 +148,18 @@ function _init()
    end
 end
 
+function print_center(str,y,col)
+   local width = 4 * #str
+   local x = 64 - 2 * #str
+   print(str, x, y, col)   
+end
+
 function draw_title()
    local width = 4 * #title
    local x = 64 - 2 * #title
    line(x, 8, x + width - 2, 8, 9 )
    line(x, 16, x + width - 2, 16, 9 )   
-   print(title, x, 10, 7)
+   print_center(title, 10, 7)
 end
 
 function draw_board()
@@ -80,10 +194,13 @@ function draw_player()
       spr(bottom + 4, pl.x, pl.y + 8, 2, 1, pl.left)
    else
       spr(0, pl.x, pl.y, 2, 1, pl.left)      
-      spr(bottom, pl.x, pl.y + 8, 2, 1, pl.left)  end 
+      spr(bottom, pl.x, pl.y + 8, 2, 1, pl.left)
+   end 
 end
 
 function _update()
+   foreach(troggles, move_troggle)
+   
    if (btn(0)) then pl.dx=-1 end
    if (btn(1)) then pl.dx= 1 end
    if (btn(2)) then pl.dy=-1 end
@@ -136,17 +253,20 @@ function _draw()
    camera (0, 0)
    rectfill (0,0,127,127,0) 
    map(0,0, 0,0, 16,16)
+   
+   clip(originx + 1,originy + 1,originx + (cx-1)*16, originy + (cy-1)*16)
    draw_player()
-
+   draw_board()   
+   foreach(troggles, draw_troggle)
+   clip()
+   
    print("score " .. tostr(score), 0, 116, 7)
-   print("level " .. tostr(level), 0, 0, 5)
+   print_center("level " .. tostr(level),1,5)
    draw_title()
 
    for i = 1,lives do
       spr(0, 30 + 16 * i, 128-16, 2, 2)
    end
-
-   draw_board()
 end
 
 __gfx__
