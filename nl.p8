@@ -198,8 +198,29 @@ function draw_player()
    end 
 end
 
+function collide_event(t)
+   sfx(2)
+end
+
+function collide(t)
+   local dx = pl.x - t.x 
+   local dy = pl.y - t.y  
+   if (abs(dx) < 4) then
+      if (abs(dy) < 4) then
+	 collide_event(t)
+      end
+   end
+end
+
+function collisions()
+   for t in all(troggles) do
+      collide(t)
+   end
+end
+ 
 function _update()
    foreach(troggles, move_troggle)
+   collisions()
    
    if (btn(0)) then pl.dx=-1 end
    if (btn(1)) then pl.dx= 1 end
