@@ -258,7 +258,8 @@ function _draw()
    rectfill (0,0,127,127,0) 
    map(0,0, 0,0, 16,16)
    
-   clip(originx + 1,originy + 1,originx + (cx-1)*16, originy + (cy-1)*16)
+   clip(originx + 1,originy + 1,
+	cx*16 - 1, cy*16 - 1)
    draw_player()
    draw_board()   
    foreach(troggles, draw_troggle)
