@@ -17,7 +17,7 @@ level = 1
 lives = 3
 --title = "squares modulo 8"
 title = "odd numbers"
-desired_population = 3
+desired_population = 10
 
 -- position of board
 cx = 6
@@ -113,8 +113,10 @@ function move_troggle(t)
 	 -- troggles have a tendency to mess with the board
 	 local i = ceil((t.x - originx) / 16 + 0.5)
 	 local j = ceil((t.y - originy) / 16 + 0.5)
-	 if board[i][j] then
-	    troggle_fiddle(i,j)
+	 if i >= 1 and i <= cx and j >= 1 and j <= cy then
+	    if board[i][j] then
+	       troggle_fiddle(i,j)
+	    end
 	 end
 	 
 	 -- move in a random direction
@@ -334,9 +336,9 @@ function _draw()
    rectfill (0,0,127,127,0) 
    map(0,0, 0,0, 16,16)
    
-   clip(originx + 1,originy + 1, cx*16 - 1, cy*16 - 1)
    draw_player()
-   draw_board()   
+   draw_board()
+   clip(originx + 1,originy + 1, cx*16 - 1, cy*16 - 1)   
    foreach(troggles, draw_troggle)
    clip()
    
