@@ -13,7 +13,7 @@ pl.left = false
 
 -- game stats
 score = 17
-level = 1
+level = 2
 lives = 4
 --title = "squares modulo 8"
 
@@ -25,18 +25,37 @@ originy = 24
 
 function congruence(residue,modulus)
    return function(n)
-      if n <= 0 then return nil end
       return (n % modulus) == residue
+   end
+end
+
+function intersection(f,g)
+   return function(n)
+      if f(n) == nil then return nil end
+      if g(n) == nil then return nil end
+      return f(n) and g(n)
+   end
+end
+
+function bounded(a,b)
+   return function(n)
+      if n < a then return nil end
+      if n > b then return nil end
+      return true
    end
 end
 
 levels = {
    { title = "odd numbers",
-     f = congruence(1,2),
+     f = intersection(bounded(0,30),congruence(1,2)),
      troggle_count = 1,
    },
    { title = "multiples of 3",
-     f = congruence(0,3),
+     f = intersection(bounded(1,20),congruence(0,3)),     
+     troggle_count = 2,     
+   },
+   { title = "multiples of 5",
+     f = intersection(bounded(1,99),congruence(0,5)),
      troggle_count = 3,     
    },
 }
@@ -241,8 +260,8 @@ function draw_board()
 	    local text = tostr(board[i][j])
 	    local width = 4 * #text - 2
 	    local col = 6
-	    if board[i][j] and levels[level].f(board[i][j]) then col = 7 end
-	    if board[i][j] and not levels[level].f(board[i][j]) then col = 5 end	    
+	    --if board[i][j] and levels[level].f(board[i][j]) then col = 7 end
+	    --if board[i][j] and not levels[level].f(board[i][j]) then col = 5 end	    
 	    print(tostr(board[i][j]),(i-1)*16 + originx + 8 - width/2,(j-1)*16 + originy + 6, col)
 	 end
       end      
@@ -333,6 +352,7 @@ function _update()
    if is_level_won() then
       sfx(3)
       level = level + 1
+      if level > #levels then level = #levels end
       fill_board()
    end
    
@@ -424,7 +444,7 @@ function _draw()
    clip()
    
    print("score " .. tostr(score), 0, 116, 7)
-   print_center("level " .. tostr(level),1,5)
+   print_center("level " .. tostr(level),2,5)
    draw_title()
 
    bounce = bounce + 1
