@@ -14,9 +14,8 @@ pl.left = false
 -- game stats
 score = 17
 level = 1
-lives = 3
+lives = 4
 --title = "squares modulo 8"
-desired_population = 3
 
 -- position of board
 cx = 6
@@ -33,15 +32,27 @@ end
 
 levels = {
    { title = "odd numbers",
-     f = congruence(1,2)
+     f = congruence(1,2),
+     troggle_count = 1,
    },
    { title = "multiples of 3",
-     f = congruence(0,3)
+     f = congruence(0,3),
+     troggle_count = 3,     
    },
 }
 
+function die()
+   pl.dead = true
+end
+
 function eat(number)
-   score = score + 1
+   if levels[level].f(number) == false then
+      die()
+      sfx(2)	       
+   else
+      score = score + 5 * level
+      sfx(1)	 
+   end
 end
 
 function draw_troggle(t)
@@ -261,7 +272,7 @@ end
 
 function collide_event(s,t)
    if s == pl then
-      --sfx(2)
+      die()
       return
    end
 
@@ -281,9 +292,12 @@ function collide(s,t)
 end
 
 function collisions()
-   for t in all(troggles) do
-      collide(pl,t)
+   if not pl.dead then
+      for t in all(troggles) do
+	 collide(pl,t)
+      end
    end
+   
    for t in all(troggles) do
       for s in all(troggles) do
 	 if s ~= t and not s.dead and not t.dead then
@@ -294,13 +308,22 @@ function collisions()
 end
  
 function _update()
-   if #troggles < desired_population then
+   if #troggles < levels[level].troggle_count then
       make_random_troggle()
    end
    
    foreach(troggles, move_troggle)
    collisions()
 
+   if pl.dead then
+      if (btn(4) or btn(5)) then
+	 pl.dead = false
+	 -- BADBAD: move to a safe space
+	 lives = lives - 1
+      end
+      return
+   end
+   
    if (btn(0)) then pl.dx=-1 end
    if (btn(1)) then pl.dx= 1 end
    if (btn(2)) then pl.dy=-1 end
@@ -345,7 +368,6 @@ function _update()
    if not (btn(4) or btn(5)) then
       if pl.mouth_open and board[i][j] != false then
 	 eat(board[i][j])
-	 sfx(1)	 
 	 board[i][j] = false
       end
       pl.mouth_open=false	    
@@ -353,12 +375,18 @@ function _update()
 
 end
 
+bounce = 0
+offset = 0
+
 function _draw()
    camera (0, 0)
    rectfill (0,0,127,127,0) 
    map(0,0, 0,0, 16,16)
+
+   if not pl.dead then
+      draw_player()
+   end
    
-   draw_player()
    draw_board()
    clip(originx + 1,originy + 1, cx*16 - 1, cy*16 - 1)   
    foreach(troggles, draw_troggle)
@@ -368,7 +396,16 @@ function _draw()
    print_center("level " .. tostr(level),1,5)
    draw_title()
 
+   bounce = bounce + 1
+   if bounce == 6 then
+      bounce = 0
+      offset = 1 - offset
+   end
+
    for i = 1,lives do
+      if i == lives and pl.dead then
+	 camera (0, offset)
+      end
       spr(0, 30 + 16 * i, 128-16, 2, 2)
    end
 end
