@@ -43,12 +43,12 @@ levels = {
 
 function die()
    pl.dead = true
+   sfx(2)	          
 end
 
 function eat(number)
    if levels[level].f(number) == false then
       die()
-      sfx(2)	       
    else
       score = score + 5 * level
       sfx(1)	 
@@ -240,7 +240,10 @@ function draw_board()
 	 if board[i][j] != false then
 	    local text = tostr(board[i][j])
 	    local width = 4 * #text - 2
-	    print(tostr(board[i][j]),(i-1)*16 + originx + 8 - width/2,(j-1)*16 + originy + 6, 6)
+	    local col = 6
+	    if board[i][j] and levels[level].f(board[i][j]) then col = 7 end
+	    if board[i][j] and not levels[level].f(board[i][j]) then col = 5 end	    
+	    print(tostr(board[i][j]),(i-1)*16 + originx + 8 - width/2,(j-1)*16 + originy + 6, col)
 	 end
       end      
    end
@@ -306,10 +309,31 @@ function collisions()
       end
    end   
 end
- 
+
+function is_level_won()
+   for i=1,cx do
+      for j=1,cy do
+	 if board[i][j] != false then
+	    if levels[level].f(board[i][j]) == true then
+	       return false
+	    end
+	 end
+      end      
+   end
+   
+   return true
+end
+
 function _update()
    if #troggles < levels[level].troggle_count then
       make_random_troggle()
+   end
+   
+   -- BADBAD
+   if is_level_won() then
+      sfx(3)
+      level = level + 1
+      fill_board()
    end
    
    foreach(troggles, move_troggle)
@@ -318,12 +342,19 @@ function _update()
    if pl.dead then
       if (btn(4) or btn(5)) then
 	 pl.dead = false
+	 pl.resurrecting = true
 	 -- BADBAD: move to a safe space
 	 lives = lives - 1
       end
       return
    end
-   
+
+   if pl.resurrecting then
+      if not (btn(4) or btn(5)) then
+	 pl.resurrecting = false
+      end
+   end
+
    if (btn(0)) then pl.dx=-1 end
    if (btn(1)) then pl.dx= 1 end
    if (btn(2)) then pl.dy=-1 end
@@ -356,7 +387,7 @@ function _update()
    end
    
    -- handle eating
-   if (btn(4) or btn(5)) then
+   if (btn(4) or btn(5)) and not pl.resurrecting then
       if not pl.mouth_open then
 	 sfx(0)
       end
