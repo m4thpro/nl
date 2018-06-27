@@ -16,14 +16,26 @@ score = 17
 level = 1
 lives = 3
 --title = "squares modulo 8"
-title = "odd numbers"
-desired_population = 10
+desired_population = 3
 
 -- position of board
 cx = 6
 cy = 5
 originx = 16
 originy = 24
+
+function congruence(residue,modulus)
+   return function(n)
+      if n <= 0 then return nil end
+      return (n % modulus) == residue
+   end
+end
+
+levels = {
+   { title = "odd numbers",
+     f = congruence(1,2)
+   },
+}
 
 function eat(number)
    score = score + 1
@@ -172,19 +184,25 @@ function make_random_troggle()
 
 end
 
-function _init()
-   troggles = {}
-   board = {}
-
+function fill_board()
    for i=1,cx do
       board[i] = {}
       for j=1,cy do
-	 board[i][j] = i+j
-	 if i==j then
-	    board[i][j] = false
-	 end
+	 local desire = false
+	 if flr(rnd()*2) == 1 then desire = true end
+	 local n
+	 repeat
+	    n = flr(rnd() * 199) - 99
+	 until levels[level].f(n) == desire
+	 board[i][j] = n
       end      
    end
+end
+
+function _init()
+   troggles = {}
+   board = {}
+   fill_board()
 end
 
 function print_center(str,y,col)
@@ -194,6 +212,7 @@ function print_center(str,y,col)
 end
 
 function draw_title()
+   local title = levels[level].title
    local width = 4 * #title
    local x = 64 - 2 * #title
    line(x, 8, x + width - 2, 8, 9 )
