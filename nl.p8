@@ -35,14 +35,13 @@ levels = {
    { title = "odd numbers",
      f = congruence(1,2)
    },
+   { title = "multiples of 3",
+     f = congruence(0,3)
+   },
 }
 
 function eat(number)
    score = score + 1
-end
-
-function troggle_fiddle(i,j)
-   board[i][j] = board[i][j] + 1
 end
 
 function draw_troggle(t)
@@ -112,7 +111,7 @@ function move_troggle(t)
 
    -- if we are not moving, then wait a random time
    if t.dx == 0 and t.dy == 0 and not t.waiting then
-      t.waiting = rnd() * 32
+      t.waiting = rnd(32)
    end
 
    if t.waiting then
@@ -127,12 +126,12 @@ function move_troggle(t)
 	 local j = ceil((t.y - originy) / 16 + 0.5)
 	 if i >= 1 and i <= cx and j >= 1 and j <= cy then
 	    if board[i][j] then
-	       troggle_fiddle(i,j)
+	       fill_square(i,j)
 	    end
 	 end
 	 
 	 -- move in a random direction
-	 local r = flr(4*rnd())
+	 local r = flr(rnd(4))
 	 if r == 0 then t.dx =  1 end
 	 if r == 1 then t.dx = -1 end
 	 if r == 2 then t.dy =  1 end
@@ -163,7 +162,7 @@ end
 
 function make_random_troggle()
    local t = make_troggle(0,0)
-   local r = flr(4*rnd())
+   local r = flr(rnd(4))
    if r == 0 then t.dx =  1 end
    if r == 1 then t.dx = -1 end
    if r == 2 then t.dy =  1 end
@@ -175,26 +174,30 @@ function make_random_troggle()
    if t.dx == -1 then t.x = originx+cx*16 end      
    
    if t.dy == 0 then
-      t.y = originy + flr(cy*rnd()) * 16
+      t.y = originy + flr(rnd(cy)) * 16
    end
    
    if t.dx == 0 then
-      t.x = originx + flr(cy*rnd()) * 16
+      t.x = originx + flr(rnd(cx)) * 16
    end
 
+end
+
+function fill_square(i,j)
+   local desire = false   
+   if flr(rnd(2)) == 1 then desire = true end
+   local n
+   repeat
+      n = flr(rnd(199) - 99)
+   until levels[level].f(n) == desire
+   board[i][j] = n
 end
 
 function fill_board()
    for i=1,cx do
       board[i] = {}
       for j=1,cy do
-	 local desire = false
-	 if flr(rnd()*2) == 1 then desire = true end
-	 local n
-	 repeat
-	    n = flr(rnd() * 199) - 99
-	 until levels[level].f(n) == desire
-	 board[i][j] = n
+	 fill_square(i,j)
       end      
    end
 end
