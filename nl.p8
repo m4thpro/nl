@@ -12,8 +12,8 @@ pl.dy = 0
 pl.left = false
 
 -- game stats
-score = 17
-level = 2
+score = 0
+level = 1
 lives = 4
 --title = "squares modulo 8"
 
