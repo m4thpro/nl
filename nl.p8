@@ -14,7 +14,7 @@ pl.left = false
 -- game stats
 score = 0
 level = 1
-lives = 4
+lives = 3
 --title = "squares modulo 8"
 
 -- position of board
@@ -232,10 +232,16 @@ function fill_board()
    end
 end
 
-function _init()
-   troggles = {}
-   board = {}
+function reset_level()
+   troggles = {}   
    fill_board()
+   lives = lives + 1
+   pl.dead = true
+end
+
+function _init()
+   board = {}
+   reset_level()
 end
 
 function print_center(str,y,col)
@@ -260,8 +266,8 @@ function draw_board()
 	    local text = tostr(board[i][j])
 	    local width = 4 * #text - 2
 	    local col = 6
-	    --if board[i][j] and levels[level].f(board[i][j]) then col = 7 end
-	    --if board[i][j] and not levels[level].f(board[i][j]) then col = 5 end	    
+	    if board[i][j] and levels[level].f(board[i][j]) then col = 7 end
+	    if board[i][j] and not levels[level].f(board[i][j]) then col = 5 end	    
 	    print(tostr(board[i][j]),(i-1)*16 + originx + 8 - width/2,(j-1)*16 + originy + 6, col)
 	 end
       end      
@@ -345,7 +351,9 @@ end
 
 function _update()
    if #troggles < levels[level].troggle_count then
-      make_random_troggle()
+      if rnd(100) < 1 then
+	 make_random_troggle()
+      end
    end
    
    -- BADBAD
@@ -353,7 +361,7 @@ function _update()
       sfx(3)
       level = level + 1
       if level > #levels then level = #levels end
-      fill_board()
+      reset_level()
    end
    
    foreach(troggles, move_troggle)
@@ -457,6 +465,7 @@ function _draw()
       if i == lives and pl.dead then
 	 camera (0, offset)
       end
+      pal(8,0)      
       spr(0, 30 + 16 * i, 128-16, 2, 2)
    end
 end
