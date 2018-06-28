@@ -10,12 +10,14 @@ pl.y = 16
 pl.dx = 0
 pl.dy = 0
 pl.left = false
+pl.bounce = 0
+pl.offset = 0
 
 -- game stats
 score = 0
 level = 1
 lives = 3
---title = "squares modulo 8"
+cheat_mode = false
 
 -- position of board
 cx = 6
@@ -241,6 +243,17 @@ end
 
 function _init()
    board = {}
+
+   function disable_cheat_mode()
+      cheat_mode = false
+      menuitem(1, "enable hints", enable_cheat_mode)
+   end
+   function enable_cheat_mode()
+      cheat_mode = true
+      menuitem(1, "disable hints", disable_cheat_mode)
+   end
+   disable_cheat_mode()
+   
    reset_level()
 end
 
@@ -266,8 +279,10 @@ function draw_board()
 	    local text = tostr(board[i][j])
 	    local width = 4 * #text - 2
 	    local col = 6
-	    if board[i][j] and levels[level].f(board[i][j]) then col = 7 end
-	    if board[i][j] and not levels[level].f(board[i][j]) then col = 5 end	    
+	    if cheat_mode then
+	       if board[i][j] and levels[level].f(board[i][j]) then col = 7 end
+	       if board[i][j] and not levels[level].f(board[i][j]) then col = 5 end
+	    end
 	    print(tostr(board[i][j]),(i-1)*16 + originx + 8 - width/2,(j-1)*16 + originy + 6, col)
 	 end
       end      
@@ -350,17 +365,17 @@ function is_level_won()
 end
 
 function _update()
+   -- when there aren't enough troggles...
    if #troggles < levels[level].troggle_count then
+      -- sometimes make more
       if rnd(100) < 1 then
 	 make_random_troggle()
       end
    end
    
-   -- BADBAD
    if is_level_won() then
       sfx(3)
-      level = level + 1
-      if level > #levels then level = #levels end
+      level = min(level + 1, #levels)
       reset_level()
    end
    
@@ -434,9 +449,6 @@ function _update()
 
 end
 
-bounce = 0
-offset = 0
-
 function _draw()
    camera (0, 0)
    rectfill (0,0,127,127,0) 
@@ -455,15 +467,15 @@ function _draw()
    print_center("level " .. tostr(level),2,5)
    draw_title()
 
-   bounce = bounce + 1
-   if bounce == 6 then
-      bounce = 0
-      offset = 1 - offset
+   pl.bounce = pl.bounce + 1
+   if pl.bounce == 6 then
+      pl.bounce = 0
+      pl.offset = 1 - pl.offset
    end
 
    for i = 1,lives do
       if i == lives and pl.dead then
-	 camera (0, offset)
+	 camera (0, pl.offset)
       end
       pal(8,0)      
       spr(0, 30 + 16 * i, 128-16, 2, 2)
