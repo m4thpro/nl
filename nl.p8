@@ -34,6 +34,51 @@ function intersection(f,g)
    end
 end
 
+function prime(n)
+   if n <= 1 then return false end
+   for i = 2, n-1 do
+      if n % i == 0 then
+	 return false
+      end
+   end
+   return true
+end
+
+function gcd(m, n)
+   while m ~= 0 do
+      m, n = (n % m), m
+   end
+   return n
+end
+
+function units_mod_m(m)
+   return function(n)
+      if (gcd(m,n) == 1) then return true end
+      return false
+   end
+end
+
+function square_mod_m(m)
+   return function(n)
+      for i=0, m-1 do
+	 if i*i % m == n % m then  return true end
+      end
+      return false
+   end
+end
+
+function square(n)
+   if (flr(sqrt(n))*flr(sqrt(n)) == n) then return true end
+   return false
+end
+
+function sum_of_two_squares(n)
+   for i = 0, flr(sqrt(n)) do
+      if square(n-i*i) then return true end
+   end
+   return false
+end
+
 function bounded(a,b)
    return function(n)
       if n < a then return nil end
@@ -42,7 +87,41 @@ function bounded(a,b)
    end
 end
 
+function primes_in_zi(n)
+   if not prime(n) then return nil end
+   if sum_of_two_squares(n) then return false end
+   return true
+end
+
 levels = {
+   { title = "primes in z[i]",
+     f = intersection(bounded(0,99),primes_in_zi),
+     troggle_count = 10,
+   },         
+   { title = "squares modulo 5",
+     f = intersection(bounded(0,4),square_mod_m(5)),
+     troggle_count = 10,
+   },         
+   { title = "squares modulo 8",
+     f = intersection(bounded(0,7),square_mod_m(8)),
+     troggle_count = 10,
+   },         
+   { title = "units modulo 12",
+     f = intersection(bounded(0,11),units_mod_m(12)),
+     troggle_count = 10,
+   },
+   { title = "sums of two squares",
+     f = intersection(bounded(0,99),sum_of_two_squares),
+     troggle_count = 10,
+   },   
+   { title = "primes",
+     f = intersection(bounded(0,99),prime),
+     troggle_count = 10,
+   },
+   { title = "squares",
+     f = intersection(bounded(0,99),square),
+     troggle_count = 10,
+   },
    { title = "odd numbers",
      f = intersection(bounded(0,30),congruence(1,2)),
      troggle_count = 10,
