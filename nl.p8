@@ -13,12 +13,6 @@ pl.left = false
 pl.bounce = 0
 pl.offset = 0
 
--- game stats
-score = 0
-level = 1
-lives = 3
-cheat_mode = false
-
 -- position of board
 cx = 6
 cy = 5
@@ -64,7 +58,12 @@ levels = {
 
 function die()
    pl.dead = true
-   sfx(2)	          
+   if lives == 0 then
+      game_over = true
+      sfx(4)
+   else
+      sfx(2)      
+   end
 end
 
 function eat(number)
@@ -244,6 +243,15 @@ end
 function _init()
    board = {}
 
+   -- game stats
+   score = 0
+   level = 1
+   lives = 1
+   cheat_mode = false
+   title_screen = false
+   game_over = false
+   game_over_counter = 0
+   
    function disable_cheat_mode()
       cheat_mode = false
       menuitem(1, "enable hints", enable_cheat_mode)
@@ -290,7 +298,7 @@ function draw_board()
 end
 
 function draw_player()
-   local bottom
+   local bottom = 16
    
    if pl.dx == 0 and pl.dy == 0 then
       bottom = 16
@@ -365,6 +373,11 @@ function is_level_won()
 end
 
 function _update()
+   if title_screen then
+      title_screen_update()
+      return
+   end
+
    -- when there aren't enough troggles...
    if #troggles < levels[level].troggle_count then
       -- sometimes make more
@@ -382,6 +395,15 @@ function _update()
    foreach(troggles, move_troggle)
    collisions()
 
+   if game_over then
+      game_over_counter = game_over_counter + 1
+
+      if (btn(4) or btn(5)) then
+	 _init()
+      end
+      return
+   end
+   
    if pl.dead then
       if (btn(4) or btn(5)) then
 	 pl.dead = false
@@ -450,6 +472,15 @@ function _update()
 end
 
 function _draw()
+   if title_screen then
+      title_screen_draw()
+      return
+   end
+
+   if game_over then
+      fade_scr(game_over_counter/10)
+   end
+   
    camera (0, 0)
    rectfill (0,0,127,127,0) 
    map(0,0, 0,0, 16,16)
@@ -462,6 +493,8 @@ function _draw()
    clip(originx + 1,originy + 1, cx*16 - 1, cy*16 - 1)   
    foreach(troggles, draw_troggle)
    clip()
+
+   fade_scr(0)
    
    print("score " .. tostr(score), 0, 116, 7)
    print_center("level " .. tostr(level),2,5)
@@ -479,6 +512,60 @@ function _draw()
       end
       pal(8,0)      
       spr(0, 30 + 16 * i, 128-16, 2, 2)
+   end
+
+   if game_over then
+      fade_scr(1.0 - (min(game_over_counter,20)/20))
+      print_center("game over",50,7)
+   end   
+end
+
+pl.x = -16
+frame_count = 0
+function title_screen_update()
+   frame_count = frame_count + 1
+   if frame_count % 2 == 0 then
+      pl.dx = 2
+      pl.x = pl.x + pl.dx
+   end
+   if pl.x > 128 + 16 then pl.x = -16 end
+
+   pl.mouth_open = (frame_count % 30) / 30 < 0.5
+end
+
+function title_screen_draw()
+   cls()
+   print_center("number lunchers",35,7)
+
+   draw_player()
+end
+
+function fade_scr(fa)
+   fa=max(min(1,fa),0)
+   local fn=8
+   local pn=15
+   local fc=1/fn
+   local fi=flr(fa/fc)+1
+   local fades={
+      {1,1,1,1,0,0,0,0},
+      {2,2,2,1,1,0,0,0},
+      {3,3,4,5,2,1,1,0},
+      {4,4,2,2,1,1,1,0},
+      {5,5,2,2,1,1,1,0},
+      {6,6,13,5,2,1,1,0},
+      {7,7,6,13,5,2,1,0},
+      {8,8,9,4,5,2,1,0},
+      {9,9,4,5,2,1,1,0},
+      {10,15,9,4,5,2,1,0},
+      {11,11,3,4,5,2,1,0},
+      {12,12,13,5,5,2,1,0},
+      {13,13,5,5,2,1,1,0},
+      {14,9,9,4,5,2,1,0},
+      {15,14,9,4,5,2,1,0}
+   }
+   
+   for n=1,pn do
+      pal(n,fades[n][fi],0)
    end
 end
 
@@ -535,7 +622,7 @@ __sfx__
 010500002b0541c042007350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 013c000007170001500c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 010c00000c1500e050101501105010150110501315013050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+011000001a5621a1151d5621d115215621d1151d5621a1151a5621a1151d5621d1151a5621a11518562181151a5621a1151c5621a1151a56218515185621a5151a5621a565000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
