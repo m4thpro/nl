@@ -18,6 +18,7 @@ cx = 6
 cy = 5
 originx = 16
 originy = 24
+making_troggle = -1
 
 function congruence(residue,modulus)
    return function(n)
@@ -44,7 +45,7 @@ end
 levels = {
    { title = "odd numbers",
      f = intersection(bounded(0,30),congruence(1,2)),
-     troggle_count = 1,
+     troggle_count = 10,
    },
    { title = "multiples of 3",
      f = intersection(bounded(1,20),congruence(0,3)),     
@@ -60,6 +61,7 @@ function die()
    pl.dead = true
    if lives == 0 then
       game_over = true
+      sfx(2)
       sfx(4)
    else
       sfx(2)      
@@ -379,10 +381,18 @@ function _update()
    end
 
    -- when there aren't enough troggles...
-   if #troggles < levels[level].troggle_count then
-      -- sometimes make more
-      if rnd(100) < 1 then
+   if making_troggle < 0 then
+      if #troggles < levels[level].troggle_count then
+	 -- sometimes make more
+	 if rnd(100) < 1 then
+	    making_troggle = 30
+	 end
+      end
+   else
+      making_troggle = making_troggle - 1
+      if making_troggle <= 0 then
 	 make_random_troggle()
+	 making_troggle = -1
       end
    end
    
@@ -472,6 +482,20 @@ function _update()
 
 end
 
+function print_troggle_warning()
+   local y = 40
+   local x = 6
+   local height = 6
+   print("t",x,y,7) ; y = y + height
+   print("r",x,y,7) ; y = y + height
+   print("o",x,y,7) ; y = y + height
+   print("g",x,y,7) ; y = y + height
+   print("g",x,y,7) ; y = y + height
+   print("l",x,y,7) ; y = y + height
+   print("e",x,y,7) ; y = y + height
+   print("!",x,y,7) ; y = y + height           
+end
+
 function _draw()
    if title_screen then
       title_screen_draw()
@@ -485,6 +509,12 @@ function _draw()
    camera (0, 0)
    rectfill (0,0,127,127,0) 
    map(0,0, 0,0, 16,16)
+
+   if not game_over and making_troggle > 0 then
+      fade_scr(making_troggle / 30)
+      print_troggle_warning()
+      fade_scr(0)            
+   end
 
    if not pl.dead then
       draw_player()
