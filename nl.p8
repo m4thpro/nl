@@ -94,6 +94,10 @@ function primes_in_zi(n)
 end
 
 levels = {
+   { title = "odd numbers",
+     f = intersection(bounded(0,30),congruence(1,2)),
+     troggle_count = 10,
+   },   
    { title = "primes in z[i]",
      f = intersection(bounded(0,99),primes_in_zi),
      troggle_count = 10,
@@ -120,10 +124,6 @@ levels = {
    },
    { title = "squares",
      f = intersection(bounded(0,99),square),
-     troggle_count = 10,
-   },
-   { title = "odd numbers",
-     f = intersection(bounded(0,30),congruence(1,2)),
      troggle_count = 10,
    },
    { title = "multiples of 3",
@@ -327,7 +327,7 @@ function _init()
    -- game stats
    score = 0
    level = 1
-   lives = 1
+   lives = 3
    cheat_mode = false
    title_screen = false
    game_over = false
